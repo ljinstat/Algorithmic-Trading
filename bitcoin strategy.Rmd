@@ -1,0 +1,2206 @@
+---
+  title: "Bitcoin"
+author: "Ling JIN"
+date: "10 janvier 2017"
+output: html_document
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r }
+setwd('/Users/lingjin/Downloads')
+rm(list=objects())
+library("xts")
+library("TTR")
+library("zoo")
+library("Quandl")
+library("quantmod")
+library('urca')
+library('tseries')
+library('ggplot2')
+library('dplyr')
+library("RCurl")
+library('reshape2')
+library('glmnet')
+library('ROCR')
+library('rpart')
+library('randomForest')
+library('e1071')
+library('neuralnet')
+library("timeDate")
+library("forecast")
+library("tseries")
+library('polynom')
+library('magrittr')
+library('parallel')
+library('portes')
+library('lattice')
+library('timeSeries')
+library('fGarch')
+```
+
+```{r}
+### Bitcoin Market Size
+         # #Total bitcoin
+# btotal <- Quandl("BCHAIN/TOTBC", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Market capitalization in USD
+# bmarket.cap <- Quandl("BCHAIN/MKTCP", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Number of unique bitcoin addresses used per day
+# bnum.adr <- Quandl("BCHAIN/NADDU", start_date = "2009-01-03", end_date = "2017-01-09")
+
+```
+
+
+```{r}
+### Bitcoin Activity
+# # Estimated trasaction Volume/ Compared to total output volume, this may have a more accurate relection of the true transaction volume.
+# best.tran.vol <- Quandl("BCHAIN/ETRAV", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+      # #Estimated trasaction Volume USD
+# best.tran.vol.usd <- Quandl("BCHAIN/ETRVU", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #BTC/USD Exchange volume
+#"BCHAIN/TRVOU"
+#
+# #Transactions excluding popular addresses/exclude those which involve any of the top 100 popular addresses 
+# btran.exclu.adr <- Quandl("BCHAIN/NTREP", start_date = "2009-01-03", end_date = "2017-01-09")
+#
+# #Number of trasactions
+# bnum.trans <- Quandl("BCHAIN/NTRAN", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+      # #Cumulative number of transactions
+# bcum.num.tran <- Quandl("BCHAIN/NTRAT", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Number of transaction per block
+# bnumtranblo <- Quandl("BCHAIN/NTRBL", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Trade vol vs trasaction vol
+#"BCHAIN/TVTVR"
+#
+# #Days Destroyed
+# "BCHAIN/BCDDE"
+#
+# #Average transaction confirmation time
+# bavetrancomtime <- 
+# Quandl("BCHAIN/ATRCT", start_date = "2009-01-03", end_date = "2017-01-09")
+
+```
+
+
+```{r}
+      ### Transaction Fees
+# #Total transaction fees in BTC
+# btotal.fee.btc <- Quandl("BCHAIN/TRFEE", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+      # #Total transaction fees in USD
+# btotal.fee.usd <- Quandl("BCHAIN/TRFUS", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Cost per transaction
+# bcost.tran <- Quandl("BCHAIN/CPTRA", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Percentage cost of transaction volume
+# "BCHAIN/CPTRV"
+# #drop cost as percentage of transaction volume because of amounts of zero, and ratio of trade volume to transaction volume because of unadapted date.
+
+
+```
+
+
+```{r}
+### Mining
+
+     # #Blockchain size
+# bblochain.size <- Quandl("BCHAIN/BLCHS", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Average block size in MB
+# bave.blo.size <- Quandl("BCHAIN/AVBLS", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+        # #Total value of all transaction outputs per day
+# btotal.tran.out <- Quandl("BCHAIN/TOUTV", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Estimated number of giga hashes per second
+# best.hash <- Quandl("BCHAIN/HRATE", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Miners revenue
+# bminer <- Quandl("BCHAIN/MIREV", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Network Deficit/ difference between transaction fees and cost of mining
+# bnet.def <- Quandl("BCHAIN/NETDF", start_date = "2009-01-03", end_date = "2017-01-09")
+# 
+# #Difficulty/ If the network hash rate is high and the time taken to discover a new block is less than 10 minutes, the network will increase the difficulty level proportionately to increase the block discovery time and vice versa.
+# bdiff <- Quandl("BCHAIN/DIFF", start_date = "2009-01-03", end_date = "2017-01-09")
+
+```
+
+#### Market
+*1. Market capitalization &
+
+#### Transaction
+*2. Unique Bitcoin addresses && +
+*3. Transaction volume BTC && ~
+*4. BTC/USD Exchange Trade Volume & ~
+*5. Transaction excluding popular addresses & ~
+*6. Number of Bitcoin transaction & ~
+*7. Number of trasactions per block & ~
+*8. Transaction to trade ratio & missing data (think about how to deal with missing data)
+*9. Days Destroys & +
+
+#### Network Utility
+*10. Average Transaction Confirmation Time && -
+*11. Cost per transaction && ~
+*12. Cost as percentage of transaction volume && ~
+
+#### Network Health / Mining
+*13. Average block size && +
+*14. Hash Rate && +
+*15. Network Deficit & missing data (think about how to deal with missing data) ~
+*16. Difficulty && +
+*17. Miners revenue && +
+*18. Orphaned Blocks & missing data ~
+
+
+```{r data feature lists}
+#Daily features
+#16 variables
+blist <- c("BCHARTS/BITSTAMPUSD", #1. BTC/USD price
+           "BCHAIN/MKTCP",        #2. Market cap
+           "BCHAIN/NADDU",        #3. Unique addresse
+           "BCHAIN/ETRAV",        #4. Estimated trasaction Volume BTC
+           "BCHAIN/TRVOU",        #5. BTC/USD Exchange Trade Volume
+           "BCHAIN/NTREP",        #6. Transaction excluding popular addresses
+           "BCHAIN/NTRAN",        #7. Number of trasactions
+           "BCHAIN/NTRBL",        #8. Number of trasactions per block
+           #"BCHAIN/TVTVR",        #9. Transaction to trade ratio
+           "BCHAIN/BCDDE",        #10. Days Destroys
+           "BCHAIN/ATRCT",        #11. Average Transaction Confirmation Time
+           "BCHAIN/CPTRA",        #12. Cost per transaction
+           "BCHAIN/CPTRV",        #13. Percentage cost of transaction volume
+           "BCHAIN/AVBLS",        #14. Average block size
+           "BCHAIN/HRATE",        #15. Hash Rate
+           #"BCHAIN/NETDF"        #16. Network Deficit
+           "BCHAIN/DIFF",         #17. Difficulty
+           "BCHAIN/MIREV")        #18. Miner revenue
+
+#Daily return of USD and EUR
+blist.change <- c("BCHARTS/BITSTAMPUSD", "BCHARTS/KRAKENEUR")
+```
+
+### Data Description
+
+```{r}
+#data : including bitcoin price, blockchain features, up and down indicators and daily return rate
+#       from 2013-01-03 to 2017-02-03
+#data.new : including bitcoin price, blockchain features, up and down indicators, daily return rate and price indicators
+```
+
+### Download daily data
+Q1 :
+
+```{r functions to download data from Quandl}
+#Function to download all variables that we need
+#bitcoin.list : a vector of variables
+#start.date : beginning date
+#end.date : ending date
+#--------------------------------------------------------------------
+# Quandl(code, type = c("raw", "ts", "zoo", "xts", "timeSeries"),
+# transform = c("", "diff", "rdiff", "normalize", "cumul", "rdiff_from"),
+# collapse = c("", "daily", "weekly", "monthly", "quarterly", "annual"),
+# order = c("desc", "asc"), meta = FALSE, force_irregular = FALSE, ...)
+
+bitcoin.data <- function(bitcoin.list, start.date, end.date){
+  
+  data <- Quandl(bitcoin.list, start_date = start.date, end_date = end.date, api_key="43XqEtrcZRy4pGg37Zu6")
+  
+  return(data)
+  
+}
+
+#Function to get change percentage data
+bitcoin.data.change <- function(bitcoin.list, start.date, end.date){
+  
+  data <- Quandl(bitcoin.list, start_date = start.date, end_date = end.date, transform = "rdiff", api_key="43XqEtrcZRy4pGg37Zu6")
+  
+  return(data)
+  
+}
+```
+
+```{r download daily data and daily change}
+#download daily data and daily features
+start.date <- "2013-01-03"
+end.date <- "2017-02-03"
+#end.date <- Sys.Date()
+bdata <- bitcoin.data(blist, start.date, end.date)
+data <- bdata[-c(1,nrow(bdata)), ]
+
+#Try to imput missing data in day destroys with mean/ missing data from 2016-07-16
+data[,16][is.na(data[,16])] <- mean(data[,16], na.rm = T)
+
+```
+
+
+```{r}
+#USD change data from 2013-01-05
+bdata.change <- bitcoin.data.change(blist.change[1], start.date, end.date)
+bdata.change <- select(bdata.change[c(nrow(bdata.change) : 2), ], Close)
+names(bdata.change) <- c("close_change")
+```
+
+
+```{r}
+#Orphaned blocks : it should be download everyday from blockchain.info
+orphaned.blocks <- read.csv("orphaned_blocks.csv", sep = ",", header = T)
+names(orphaned.blocks) <- c("Date", "Orphaned_blocks")
+orphaned.blocks <- orphaned.blocks[order(orphaned.blocks$Date), ]
+or.row <- orphaned.blocks[which(orphaned.blocks$Date == "2013-01-04 00:00:00"), ] #1462
+
+#remove date before 2013-01-03
+orphaned.blocks <- orphaned.blocks[-c(1:(1462)), ]
+
+data <- cbind(data, orphaned.blocks$Orphaned_blocks)
+data <- cbind(data, bdata.change)
+
+#from 2016-01-19 to 2016-03-04, kraken has no data for BTCEUR.
+
+#rename daily features
+bitcoin.name <- c("Date", "open", "high", "low", "close", "vol_btc", "vol_usd", "weighted_price", 
+  "market_cap", "num_addresses", "est_tran_vol_btc", "btc_usd_trade_vol", "num_tran_exclu_addresses", "num_tran", "num_tran_block", "day_destroys", "ave_tran_time", "cost_tran", "percentage_cost_tran_vol", "ave_block_size", "hash_rate_second", "diff", "miner_revenue", "orphaned_blocks", "close_change")
+
+names(data) <- bitcoin.name
+
+
+```
+
+```{r new data combined with indicators}
+data.new <- data
+#-----------------Trend indicators--Lagging indicators------------------------------------
+#SMA 15, 50, 100, 200
+data.new$sma15 <- SMA(data.new$close, 15)
+data.new$sma50 <- SMA(data.new$close, 50)
+data.new$sma100 <- SMA(data.new$close, 100)
+data.new$sma200 <- SMA(data.new$close, 200)
+
+#EMA 10, 21, 100, 200
+data.new$ema10 <- EMA(data.new$close, 10)
+data.new$ema21 <- EMA(data.new$close, 21)
+data.new$ema100 <- EMA(data.new$close, 100)
+data.new$ema200 <- EMA(data.new$close, 200)
+
+#MACD
+data.new$macd <- MACD(data.new$close)[,1]
+
+#ADX
+data.new$adx <- ADX(data.new[,3:5])[ ,4]
+
+#OBV
+data.new$obv <- OBV(data.new$close, data.new$vol_usd)
+
+#--------------Momentum----Leading indicators---------------------------------
+#RSI
+data.new$rsi <- RSI(data.new$close, 14)
+
+#-------------volatility-----------------------------------------------------
+data.new$atr <- ATR(data.new[,3:5], 14)[ ,2]
+```
+
+### Handle missing data
+
+```{r}
+
+#find the location where na exists
+data[!complete.cases(data),]
+
+#fill missing data with median and 0/ when calculating a value of a column with missing value, we should firstly drop the missing value
+data$total_bitcoin[is.na(data$total_bitcoin)] <- median(data$total_bitcoin, na.rm = T)
+#data$hash_rate_second[is.na(data$hash_rate_second)] <- 0
+
+#---------------------------------------------------------------
+#no missing data
+data.change.total[!complete.cases(data),]
+
+#------------------------------------------------------------------
+data.new <- na.omit(data.new)
+
+
+
+```
+
+
+
+
+```{r}
+#Add catagorical feature to data frame
+data$up_down_num <- ifelse(data$close_change >= 0, 1, 0)
+data$up_down <- ifelse(data$close_change >= 0, "up", "down")
+
+#Add catagorical feature to new data frame
+data.new$up_down_num <- ifelse(data.new$close_change >= 0, 1, 0)
+data.new$up_down <- ifelse(data.new$close_change >= 0, "up", "down")
+
+#=================================
+#download daily return
+#data from bitcoinchart
+#BTCUSD: from BitStamp, time period from 2011-09-13 to today
+#BTCEUR: from Kraken, time period from 2014-01-18 to today
+#data from data.bitcoinity
+#BTCCNY: from BTCC, time period from 2013 to today, csv format, only average, minimum and maximum; *It is collected per day and updated at every 0:00 UTC. 
+#We choose start date 2014-01-08
+#start.date.change <- "2014-01-08"
+start.date.change <- "2015-02-04"
+#end.date.change <- Sys.Date()
+end.date.change <- "2017-02-03"
+data.change <- bitcoin.data.change(blist.change, start.date.change, end.date.change)
+
+names(data.change) <- c("Date", "open_usd", "high_usd", "low_usd", "close_usd", "vol_btc_usd", "vol_usd", "weighted_usd", "open_eur", "high_eur", "low_eur", "close_eur", "vol_btc_eur", "vol_eur", "weighted_eur")
+
+
+#from 2016-01-19 to 2016-03-04, kraken has no data for BTCEUR. So daily return is NA
+data.change$weighted_usd[is.na(data.change$weighted_usd) | (data.change$weighted_usd == -1)] <- 0
+
+data.cny.day <- read.csv('CNY_2y.csv', header = T)
+#we take average price and caculate daily return. *diff(data.cny.day[2]) doesn't work.
+cny.day.change <- diff(data.cny.day$avg)/data.cny.day$avg[1:(length(data.cny.day$avg) - 1)]
+
+#we take weighted change percentage corresponding to cny.data
+data.change.total <-
+ bind_cols(select(data.change, Date, weighted_usd, weighted_eur), data.frame(cny.day.change))
+
+names(data.change.total) <- c("Date", "USD", "CNY", "EUR")
+
+data.change.4m <- filter(data.change.total, Date > "2016-11-04" & Date <"2017-02-03")
+
+#------------------daily data----------------------------------------
+data.day <- bitcoin.data(blist.change, start.date.change, end.date.change)
+
+names(data.day) <- c("Date", "open_usd", "high_usd", "low_usd", "close_usd", "vol_btc_usd", "vol_usd", "weighted_usd", "open_eur", "high_eur", "low_eur", "close_eur", "vol_btc_eur", "vol_eur", "weighted_eur")
+
+avg_cny <- data.frame(data.cny.day$avg)
+names(avg_cny) <- "avg_cny"
+
+avg_usd <- (data.day$high_usd + data.day$low_usd) / 2
+avg_eur <- (data.day$high_eur + data.day$low_eur) / 2
+                      
+data.day.total <-
+  cbind(select(data.day, Date), avg_cny)
+
+data.day.total$avg_usd <- avg_usd
+data.day.total$avg_eur <- avg_eur
+
+
+data.day.4m <- filter(data.day.total, Date > "2016-11-04" & Date <"2017-02-03")
+```
+
+```{r statistical analyses}
+#The probability of increase is 0.546613
+data %>% 
+  filter(up_down_num == "1") %>%
+  nrow()/nrow(data)
+
+```
+
+
+
+### Data scaling
+
+```{r}
+#normalization
+normalization <- function(data){
+  #x' = (x - min(x))/ (max(x) - min(x))
+  if((max(data) - min(data)) == 0){
+    return(data)
+  }
+  
+  (data - min(data))/(max(data) - min(data))
+  
+}
+
+#standarization
+standarization <- function(data){
+  #x' = (x - mu)/sd
+  if(sd(data) == 0){
+    return(data)
+  }
+  (data - mean(data))/ sd(data)
+}
+
+data.normal <- mutate_all(data[-c(1, ncol(data), ncol(data) - 1, ncol(data) - 2)], normalization)
+
+data.standard <- mutate_all(data[-c(1, ncol(data), ncol(data) - 1, ncol(data) - 2)], standarization)
+
+```
+
+### Download FX data
+
+```{r}
+#Foreign exchange rates
+#USD/EUR : fx.eur; USDEUR
+#USD/CNY : fx.cny; USDCNY
+fx.cny <- getSymbols("USD/CNY", src = "oanda", from = start.date.change, to = end.date.change)
+
+fx.eur <- getSymbols("USD/EUR", src = "oanda", from = start.date.change, to = end.date.change)
+
+#convert CNY and EUR to USD 
+avg_cny_weighted_usd <- data.day.total$avg_cny/USDCNY
+
+avg_eur_weighted_usd <- data.day.total$avg_eur/USDEUR
+
+#change value 0 in weighted eur to usd
+close_eur_weighted_usd[avg_eur_weighted_usd == 0] <- data.day.total$avg_usd[avg_eur_weighted_usd == 0]
+
+#merge to a data frame
+data.day.total.weighted <- bind_cols(data.frame(data.day.total$Date), data.frame(data.day.total$avg_usd), data.frame(avg_cny_weighted_usd), data.frame(avg_eur_weighted_usd))
+
+names(data.day.total.weighted) <- c("Date", "BTC/USD", "BTC/CNY", "BTC/EUR")
+
+#-------------------------------------------------------------------------------------
+
+#daily change of foreign exchange rate
+#USDCNY
+fx.cny.day.change <- diff(USDCNY)/USDCNY[1:(length(USDCNY) - 1)][-1]
+#USDEUR
+fx.eur.day.change <- diff(USDEUR)/USDEUR[1:(length(USDEUR) - 1)][-1]
+
+data.day.total.weighted.4m <- filter(data.day.total.weighted, Date > "2016-11-04" & Date <"2017-02-03")
+
+```
+
+### Download crude oil data
+
+```{r}
+#oil
+oil <- Quandl("CHRIS/CME_CL1", start_date = "2012-12-31", end_date = "2017-01-21") #data missing
+oil <- oil[order(oil$Date),]
+
+#gold
+gold <- Quandl("LBMA/GOLD", start_date = "2012-12-31", end_date = "2017-01-21")
+
+gold <- gold[order(gold$Date),]
+
+#gold["USD (AM)"] <- gold["USD (AM)"] 
+
+usd <- bind_cols(data.frame(data$Date[-c(length(data$Date), length(data$Date)-1)]), data.frame(data$close[-c(length(data$close), length(data$close)-1)]))
+
+names(usd) <- c("Date", "usd")
+
+#combine oil and gold prices
+oil.gold <- left_join(oil, gold, by = "Date")
+oil.gold <- oil.gold[c("Date", "Last", "USD (AM)")]  
+oil.gold <- oil.gold[complete.cases(oil.gold),]
+
+#correlation of oil and gold : 0.5443148
+cor.oil.gold <- cor(oil.gold$Last, oil.gold$`USD (AM)`)
+
+#combine oil and btc/usd prices
+oil.usd <- left_join(oil, usd, by = "Date", copy = T)
+oil.usd <- oil.usd[c("Date", "Last", "usd")]  
+oil.usd <- oil.usd[complete.cases(oil.usd),]
+
+#correlation of oil and BTC/USD : -0.1529274
+cor.oil.usd <- cor(oil.usd$Last, oil.usd$usd)
+
+#combine gold and btc/usd prices
+gold.usd <- left_join(gold, usd, by = "Date", copy = T)
+gold.usd <- gold.usd[c("Date", "USD (AM)", "usd")]  
+gold.usd <- gold.usd[complete.cases(gold.usd),]
+
+#correlation of oil and BTC/USD : -0.3170697
+cor.gold.usd <- cor(gold.usd$`USD (AM)`, gold.usd$usd)
+
+#
+oil.gold.usd <- left_join(oil.gold, usd, by = "Date")
+oil.gold.usd <- oil.gold.usd[c("Date", "Last", "USD (AM)", "usd")]  
+oil.gold.usd <- oil.gold.usd[complete.cases(oil.gold.usd),]
+
+names(oil.gold.usd) <- c("Date", "Oil", "Gold", "BTC_USD")
+
+#standarization
+oil.gold.usd.stand <- bind_cols(data.frame(oil.gold.usd$Date), mutate_all(oil.gold.usd[-1], standarization))
+
+names(oil.gold.usd.stand) <- c("Date", "Oil", "Gold", "BTC_USD")
+```
+
+
+### Correlation of the price and features plot 
+
+```{r}
+
+#Daily price features correlation matrix
+cor.data <- round(cor(data[, c(5, 9:24)]), 2)
+
+
+#Get upper triangle of matrix
+cor.data[upper.tri(cor.data)] <- NA
+
+#reoder correlations
+reorder <- function(df){
+# Use correlation between variables as distance
+dd <- as.dist((1-df)/2)
+hc <- hclust(dd)
+df <- df[hc$order, hc$order]
+}
+
+#Change data format
+data.plot <- melt(t(cor.data), na.rm = T)
+
+# Create a ggheatmap
+ggheatmap <- ggplot(data.plot, aes(Var2, Var1, fill = value)) +
+             geom_tile(color = "white") +
+             scale_fill_gradient2(low = "#99CCFF", high = "#0066CC", mid = "#3399FF", 
+             midpoint = 0, limit = c(-1,1), space = "Lab", 
+             name="Pearson\nCorrelation") +
+  
+             theme_minimal() + # minimal theme
+  
+             labs(title = "Correlation Matrix of Bitcoin Features") +
+  
+             theme(axis.text.x = element_text(
+                   angle = 35, 
+                   vjust = 1, 
+                   hjust = 1, 
+                   size = 12),
+                   axis.text.y = element_text(
+                   vjust = 1, 
+                   hjust = 1, 
+                   size = 15),
+                   plot.title = element_text(size = 1)) +
+  
+             coord_fixed() + 
+            # Use geom_text() to add the correlation coefficients on the graph
+            # Use a blank theme (remove axis labels, panel grids and background, and axis ticks)
+            # Use guides() to change the position of the legend title
+            geom_text(aes(Var2, Var1, label = value), color = "white", size = 2.5) +
+          theme(
+                
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank(),
+                panel.grid.major = element_blank(),
+                panel.border = element_blank(),
+                panel.background = element_blank(),
+                axis.ticks = element_blank(),
+                legend.justification = c(1, 0),
+                legend.position = c(0.6, 0.7),
+                legend.direction = "horizontal") +
+  
+          guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                        title.position = "top", title.hjust = 0.5))
+
+#We cannot plot all variables, so we drop several similar among them.
+#pairs(data[, !names(data) %in% c("Date", "est_tran_vol", "cumu_num_tran",  "num_tran_exclu_addresses", "total_tran_fee", "blo_size")], main = "Correlation figure of bitcoin variables")
+#pairs(~ close + est_tran_vol_usd + num_tran + ave_tran_time + hash_rate_second + miner_revenue + diff, data = data)
+#pairs(data)
+```
+
+### Daily price comparasion
+
+```{r}
+data.day.total.plot <- melt(data.day.total.weighted.4m, id = "Date")
+
+#color is in parameter : aes() (and geom_line); rating, factor(rating), variable
+plot.data.day.weighted <- ggplot(data.day.total.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable,
+                               linetype = variable))+
+                          geom_line(size = 1) +
+                          #set up colors
+                          #scale_fill_manual(values=c("#0066CC", "#3399FF", "#99CCFF")) +
+                          labs(list(title = "Three Main Weighted Bitcoin Price Compared to USD", x = "Date", y = "Price")) +
+                          #remove legend name
+                          theme(legend.title=element_blank())
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("BTC/USD", "BTC/CNY", "BTC/EUR")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("BTC/USD", "BTC/CNY", "BTC/EUR"))
+
+```
+
+### Daily return comparasion
+
+```{r}
+data.change.4m.plot <- melt(data.change.4m, id = "Date")
+plot.data.change <- ggplot(data.change.4m.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+
+                          geom_line(size = 1) +
+                          labs(list(title = "Daily Percentage Return Comparasions", x = "Date", y = "Daily Percentage Return")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("BTC/USD", "BTC/CNY", "BTC/EUR")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("BTC/USD", "BTC/CNY", "BTC/EUR"))
+
+
+
+```
+
+### Daily foreign exchange rate & daily return comparasion
+
+```{r}
+#USDCNY change rate VS BTCCNY daily return
+#merge to a data frame
+data.fx.change.cny <- bind_cols(data.frame(data.change.total$Date[-length(data.change.total)]),
+                                data.frame(data.change.total$CNY[-length(data.change.total)]),
+                                data.frame(fx.cny.day.change))
+
+#rename
+names(data.fx.change.cny) <- c("Date", "BTC_CNY", "USD_CNY")
+
+data.fx.change.cny.4m <- filter(data.fx.change.cny, Date > "2016-11-04" & Date <"2017-02-03")
+
+#Standarization of data
+#We standarize it because the scale of BTC/CNY and USD/CNY daily return is not the same, however the rolling correlation is the same.
+data.fx.change.cny.4m <- bind_cols(data.frame(data.fx.change.cny.4m$Date), mutate_all(data.fx.change.cny.4m[-1], standarization))
+
+names(data.fx.change.cny.4m) <- c("Date", "BTC_CNY", "USD_CNY")
+
+data.fx.change.cny.plot <- melt(data.fx.change.cny.4m, 
+                                 id = "Date")
+
+plot.fx.cny.change <- ggplot(data.fx.change.cny.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "USD/CNY and BTC/CNY Standardized Daily Return Comparasions", x = "Date", y = "Daily Return")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("BTC/CNY", "USD/CNY")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                               labels = c("BTC/CNY", "USD/CNY"))
+#-------------correlation-----------------------------------------------------------------
+
+#correlation from 2015/ 0.02683324
+cor.fx.cny <- cor(data.change.total$CNY[-length(data.change.total)], fx.cny.day.change)
+
+#zoo object
+zoo.fx.cny.4m <- zoo(select(data.fx.change.cny.4m, BTC_CNY:USD_CNY), order.by = data.fx.change.cny.4m$Date)
+
+#rolling correlation of recent 4 months
+
+rollcor.fx.cny.4m <- rollapply(zoo.fx.cny.4m, 30, function(x) cor(x[,1], x[,2]), by.column = F, align='right')
+
+#Change zoo object to data frame totally !!!
+rollcor.fx.cny.4m <- fortify.zoo(rollcor.fx.cny.4m)
+
+#It cannot work !!
+#rollcor.fx.cny <- data.frame(index(zoo.fx.cny)[30:length(index(zoo.fx.cny))], as.data.frame(rollcor.fx.cny)["rollcor.fx.cny"])
+
+names(rollcor.fx.cny.4m) <- c("Date", "Rolling_Correlation")
+
+fx.rollcor.cny.plot.4m <- melt(rollcor.fx.cny.4m, 
+                                 id = "Date")
+
+plot.fx.rollcor.cny.4m <- ggplot(fx.rollcor.cny.plot.4m,
+                           aes(x = Date,
+                               y = value)) +
+                           #     group = variable,
+                          #     color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "USD/CNY and BTC/CNY Daily Return Rolling Correlation in Recent 4 Months", x = "Date", y = "Daily Rolling Correlation")) +
+                          #remove legend name
+                          theme(legend.title=element_blank())
+                          #change variable names
+                          #scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                          #                      labels = c("BTC/CNY", "USD/CNY")) +
+                          #scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY",
+
+#--------------------------------------------------------------------------------
+
+#zoo object
+zoo.fx.cny <- zoo(select(data.fx.change.cny, BTC_CNY:USD_CNY), order.by = data.fx.change.cny$Date)
+
+#rolling correlation of recent 4 months
+
+rollcor.fx.cny <- rollapply(zoo.fx.cny, 60, function(x) cor(x[,1], x[,2]), by.column = F, align='right')
+
+#Change zoo object to data frame totally !!!
+rollcor.fx.cny <- fortify.zoo(rollcor.fx.cny)
+
+#It cannot work !!
+#rollcor.fx.cny <- data.frame(index(zoo.fx.cny)[30:length(index(zoo.fx.cny))], as.data.frame(rollcor.fx.cny)["rollcor.fx.cny"])
+
+names(rollcor.fx.cny) <- c("Date", "Rolling_Correlation")
+
+fx.rollcor.cny.plot <- melt(rollcor.fx.cny, 
+                                 id = "Date")
+
+plot.fx.rollcor.cny <- ggplot(fx.rollcor.cny.plot,
+                           aes(x = Date,
+                               y = value)) +
+                           #     group = variable,
+                          #     color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "USD/CNY and BTC/CNY Daily Return Rolling Correlation from 2015", x = "Date", y = "Daily Rolling Correlation")) +
+                          #remove legend name
+                          theme(legend.title=element_blank())
+                          #change variable names
+                          #scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                          #                      labels = c("BTC/CNY", "USD/CNY")) +
+                          #scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY",
+
+
+compara.fx.cny <- lm(data.change.total$CNY[-length(data.change.total)] ~
+                                fx.cny.day.change + 0)
+
+summary(compara.fx.cny) 
+
+plot(data.change.total$CNY[-length(data.change.total)],
+                                fx.cny.day.change, ylim = c(-0.001, 0.001))
+
+
+#------------------------EUR-------------------------------------
+#USDEUR change rate VS BTCEUR daily return
+#merge to a data frame
+data.fx.change.eur <- bind_cols(data.frame(data.change.total$Date[-length(data.change.total)]),
+                                data.frame(data.change.total$EUR[-length(data.change.total)]),
+                                data.frame(fx.eur.day.change))
+
+
+#rename
+names(data.fx.change.eur) <- c("Date", "BTC_EUR", "USD_EUR")
+
+#substract recent 4 months' data
+data.fx.change.eur.4m <- filter(data.fx.change.eur, Date > "2016-11-04" & Date <"2017-02-03")
+
+data.fx.change.eur.4m <- bind_cols(data.frame(data.fx.change.eur.4m$Date), mutate_all(data.fx.change.eur.4m[-1], standarization))
+
+names(data.fx.change.eur.4m) <- c("Date", "BTC_EUR", "USD_EUR")
+
+data.fx.change.eur.plot.4m <- melt(data.fx.change.eur.4m, 
+                                 id = "Date")
+
+
+plot.fx.eur.change.4m <- ggplot(data.fx.change.eur.plot.4m,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "BTC/EUR and BTC/EUR Standardized Daily Return Comparasions", x = "Date", y = "Daily Return")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("BTC/EUR", "USD/EUR")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("BTC/EUR", "USD/EUR"))
+
+#0.05236743
+cor.fx.eur <- cor(data.change.total$EUR[-length(data.change.total)], fx.eur.day.change)
+
+#zoo object
+zoo.fx.eur <- zoo(select(data.fx.change.eur, BTC_EUR:USD_EUR), order.by = data.fx.change.eur$Date)
+
+#rolling correlation of recent 4 months
+
+rollcor.fx.eur <- rollapply(zoo.fx.eur, 60, function(x) cor(x[,1], x[,2]), by.column = F, align='right')
+
+#Change zoo object to data frame totally !!!
+rollcor.fx.eur <- fortify.zoo(rollcor.fx.eur)
+
+#It cannot work !!
+#rollcor.fx.eur <- data.frame(index(zoo.fx.eur)[30:length(index(zoo.fx.eur))], as.data.frame(rollcor.fx.eur)["rollcor.fx.eur"])
+
+names(rollcor.fx.eur) <- c("Date", "Rolling_Correlation")
+
+fx.rollcor.eur.plot <- melt(rollcor.fx.eur, 
+                                 id = "Date")
+
+plot.fx.rollcor.eur <- ggplot(fx.rollcor.eur.plot,
+                           aes(x = Date,
+                               y = value)) +
+                           #     group = variable,
+                          #     color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "USD/EUR and BTC/EUR Daily Return Rolling Correlation from 2015", x = "Date", y = "Daily Rolling Correlation")) +
+                          #remove legend name
+                          theme(legend.title=element_blank())
+                          #change variable names
+                          #scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                          #                      labels = c("BTC/CNY", "USD/CNY")) +
+                          #scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY",
+
+
+
+compara.fx.eur <- lm(data.change.total$EUR[-length(data.change.total)] ~
+                                fx.eur.day.change + 0)
+summary(compara.fx.eur) 
+  
+plot(data.change.total$EUR[-length(data.change.total)],
+                                fx.eur.day.change, ylim = c(-0.001, 0.001))
+
+```
+
+### Oil and gold price comparasion
+
+```{r}
+#oil and gold
+
+
+oil.gold.plot <- melt(oil.gold, id = "Date")
+
+plot.oil.gold <- ggplot(oil.gold.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "Oil and Gold Daily Price comparasions", x = "Date", y = "Price")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Oil", "Gold")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Oil", "Gold"))
+
+#------------------------------------------------------------------------------------
+#oil and btc/usd 
+
+oil.usd.plot <- melt(oil.usd, id = "Date")
+
+plot.oil.usd <- ggplot(oil.usd.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "Oil and BTC/USD Daily Price comparasions", x = "Date", y = "Price")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Oil", "BTC/USD")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Oil", "BTC/USD"))
+
+#-------------------------------------------------------------------------------------------------------
+
+#gold and btc/usd
+gold.usd.plot <- melt(gold.usd, id = "Date")
+
+plot.gold.usd <- ggplot(gold.usd.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "Gold and BTC/USD Daily Price comparasions", x = "Date", y = "Price")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Gold", "BTC/USD")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Gold", "BTC/USD"))
+```
+
+```{r}
+#----------------three prices comparasions----------------------------------
+#oil, gold and btc/usd
+oil.gold.usd.plot <- melt(oil.gold.usd.stand, id = "Date")
+
+plot.oil.gold.usd <- ggplot(oil.gold.usd.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "Oil, Gold and BTC/USD Standardized Daily Price Comparasions", x = "Date", y = "Price")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Oil", "Gold", "BTC/USD")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("Oil", "Gold", "BTC/USD"))
+```
+
+```{r}
+#Oil, gold and BTC/USD correlation matrix
+cor.oil.gold.usd <- round(cor(oil.gold.usd.stand[, 2:4]), 2)
+
+
+#Get upper triangle of matrix
+cor.oil.gold.usd[upper.tri(cor.oil.gold.usd)] <- NA
+
+#reoder correlations
+reorder <- function(df){
+# Use correlation between variables as distance
+dd <- as.dist((1-df)/2)
+hc <- hclust(dd)
+df <- df[hc$order, hc$order]
+}
+
+#Change data format
+oil.gold.usd.plot <- melt(t(cor.oil.gold.usd), na.rm = T)
+
+# Create a ggheatmap
+ggheatmap <- ggplot(oil.gold.usd.plot, aes(Var2, Var1, fill = value)) +
+             geom_tile(color = "white") +
+             scale_fill_gradient2(low = "#99CCFF", high = "#0066CC", mid = "#3399FF", 
+             midpoint = 0, limit = c(-1,1), space = "Lab", 
+             name="Pearson\nCorrelation") +
+  
+             theme_minimal() + # minimal theme
+  
+             labs(title = "Correlation Matrix of Oil, Gold and BTC/USD") +
+  
+             theme(axis.text.x = element_text(vjust = 1, 
+                   hjust = 1, 
+                   size = 15),
+                   axis.text.y = element_text(vjust = 1, 
+                   hjust = 1, 
+                   size = 15),
+                   plot.title = element_text(size = 1)) +
+  
+             coord_fixed() + 
+            # Use geom_text() to add the correlation coefficients on the graph
+            # Use a blank theme (remove axis labels, panel grids and background, and axis ticks)
+            # Use guides() to change the position of the legend title
+            geom_text(aes(Var2, Var1, label = value), color = "white", size = 10) +
+          theme(
+                
+                axis.title.x = element_blank(),
+                axis.title.y = element_blank(),
+                panel.grid.major = element_blank(),
+                panel.border = element_blank(),
+                panel.background = element_blank(),
+                axis.ticks = element_blank(),
+                legend.justification = c(1, 0),
+                legend.position = c(0.6, 0.7),
+                legend.direction = "horizontal") +
+  
+          guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                        title.position = "top", title.hjust = 0.5))
+
+```
+
+```{r Gold and BTC/USD Daily Return Rolling Correlation from 2015}
+#zoo object
+zoo.gold.usd <- zoo(select(oil.gold.usd, Gold:BTC_USD), order.by = oil.gold.usd$Date)
+
+#rolling correlation of recent 4 months
+
+rollcor.gold.usd <- rollapply(zoo.gold.usd, 60, function(x) cor(x[,1], x[,2]), by.column = F, align='right')
+
+#Change zoo object to data frame totally !!!
+rollcor.gold.usd <- fortify.zoo(rollcor.gold.usd)
+
+#It cannot work !!
+#rollcor.fx.cny <- data.frame(index(zoo.fx.cny)[30:length(index(zoo.fx.cny))], as.data.frame(rollcor.fx.cny)["rollcor.fx.cny"])
+
+names(rollcor.gold.usd) <- c("Date", "Rolling_Correlation")
+
+rollcor.gold.usd.plot <- melt(rollcor.gold.usd, 
+                                 id = "Date")
+
+plot.rollcor.gold.usd <- ggplot(rollcor.gold.usd.plot,
+                           aes(x = Date,
+                               y = value)) +
+                           #     group = variable,
+                          #     color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "Gold and BTC/USD Daily Return Rolling Correlation from 2015", x = "Date", y = "Daily Rolling Correlation")) +
+                          #remove legend name
+                          theme(legend.title=element_blank())
+                          #change variable names
+                          #scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                          #                      labels = c("BTC/CNY", "USD/CNY")) +
+                          #scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY",
+
+```
+
+### Multiple linear regression
+
+```{r}
+#With raw data
+
+data.fit <- lm(data$close ~. , data = data[-1])
+summary(data.fit)
+
+#With normalized data
+
+data.normal.fit <- lm(data.normal$close ~. , data = data.normal[-1])
+summary(data.normal.fit)
+
+#With standardized data
+
+data.standard.fit <- lm(data.standard$close ~. , data = data.standard[-1])
+summary(data.standard.fit)
+```
+
+### PCA : dimension reduction
+https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/
+
+```{r}
+pca <- prcomp(mutate_all(data[-1], standarization))
+summary(pca)
+
+#biplot
+biplot(pca, scale = 0)
+```
+
+```{r pca data.new}
+#Must be standaridized !
+#Cumulative Proportion 0.80655 till PC4
+pca.new <- prcomp(select(data.new[, !names(data.new) %in% c("close_change", "up_down_num", "up_down")], market_cap:atr), scale. = T)
+
+pca.new$rotation[1:5, 1:3]
+
+biplot(pca.new, scale = 0)
+
+#first 4 components
+component.new <- pca.new$x[, 1:4]
+
+```
+
+### 15min data from Google Finance
+
+```{r}
+### 15m Price data
+##online google finance query, i = 901, p = 1Y, from current time to 
+btmp.raw.1 <- getURL('https://www.google.com/finance/getprices?i=901&p=1Y&f=d,o,h,l,c,v&df=cpct&q=BTCUSD')
+btmp.split <- strsplit(btmp.raw.1,'\n')
+btmp.split.2 <- strsplit(btmp.split[[1]][-c(1:8)], ',')
+btmp.bind <-do.call('rbind',btmp.split.2)
+#Unix time becomes NA, 29276 in total, about 305 days
+btmp <- apply(btmp.bind, 2, as.numeric)
+btmp.na <- apply(btmp, 2, function(x) which(is.na(x)))
+```
+
+Show in New WindowClear OutputExpand/Collapse Output
+
+## Bitcoin price prediction
+
+### Data pre-processing
+
+```{r data only with parameters}
+X <- select(data, market_cap:orphaned_blocks)
+X <- mutate_all(X, standarization)
+
+X.train <- X[c(1:floor(0.7 * nrow(X))), ]
+X.test <- X[-c(1:floor(0.7 * nrow(X))), ]
+
+y <- data.frame(data$up_down_num)
+
+#y.up <- ifelse(data$up_down == "up", 1, 0)
+#y.down <- ifelse(data$up_down == "down", 1, 0)
+
+#y.up.down <- cbind(y.up, y.down)
+
+#Imput missing data in y with 1, go up
+y[is.na(y)] <- 1
+
+y.train <- y[c(1:floor(0.7 * nrow(y))), ]
+y.test <- y[-c(1:floor(0.7 * nrow(y))), ]
+
+#length(y.train[y.train == "1"])/length(y.train)#0.526975
+#length(y.test[y.test == "1"])/length(y.test)#0.5932584
+
+#classification algos need factored response variable
+
+y.ud <- data.frame(data$up_down)
+
+y.ud[!complete.cases(y.ud),] <- "up"
+
+y.ud.train <- y.ud[c(1:floor(0.7 * nrow(y.ud))), ]
+y.ud.test <- y.ud[-c(1:floor(0.7 * nrow(y.ud))), ]
+
+```
+
+```{r data with indicators and parameters}
+X.new <- select(data.new[, !names(data.new) %in% c("close_change", "up_down_num", "up_down")], market_cap:atr)
+X.new <- mutate_all(X.new, standarization)
+
+X.train.new <- X.new[c(1:floor(0.7 * nrow(X.new))), ]
+X.test.new <- X.new[-c(1:floor(0.7 * nrow(X.new))), ]
+
+y.new <- data.frame(data.new$up_down_num)
+
+#y.up <- ifelse(data$up_down == "up", 1, 0)
+#y.down <- ifelse(data$up_down == "down", 1, 0)
+
+#y.up.down <- cbind(y.up, y.down)
+
+#Imput missing data in y with 1, go up
+y.new[is.na(y.new)] <- 1
+
+y.train.new <- y.new[c(1:floor(0.7 * nrow(y.new))), ]
+y.test.new <- y.new[-c(1:floor(0.7 * nrow(y.new))), ]
+
+#length(y.train[y.train == "1"])/length(y.train)#0.526975
+#length(y.test[y.test == "1"])/length(y.test)#0.5932584
+
+#classification algos need factored response variable
+
+y.ud.new <- data.frame(data.new$up_down)
+
+y.ud.new[!complete.cases(y.ud.new),] <- "up"
+
+y.ud.train.new <- y.ud.new[c(1:floor(0.7 * nrow(y.ud.new))), ]
+y.ud.test.new <- y.ud.new[-c(1:floor(0.7 * nrow(y.ud.new))), ]
+
+```
+
+```{r data with indicators only}
+X.ind <- select(data.new, sma15:atr)
+X.ind <- mutate_all(X.ind, standarization)
+
+X.train.ind <- X.ind[c(1:floor(0.7 * nrow(X.ind))), ]
+X.test.ind <- X.ind[-c(1:floor(0.7 * nrow(X.ind))), ]
+
+y.ind <- data.frame(data.new$up_down_num)
+
+#y.up <- ifelse(data$up_down == "up", 1, 0)
+#y.down <- ifelse(data$up_down == "down", 1, 0)
+
+#y.up.down <- cbind(y.up, y.down)
+
+#Imput missing data in y with 1, go up
+y.ind[is.na(y.ind)] <- 1
+
+y.train.ind <- y.ind[c(1:floor(0.7 * nrow(y.ind))), ]
+y.test.ind <- y.ind[-c(1:floor(0.7 * nrow(y.ind))), ]
+
+#length(y.train[y.train == "1"])/length(y.train)#0.526975
+#length(y.test[y.test == "1"])/length(y.test)#0.5932584
+
+#classification algos need factored response variable
+
+y.ud.ind <- data.frame(data.new$up_down)
+
+y.ud.ind[!complete.cases(y.ud.ind),] <- "up"
+
+y.ud.train.ind <- y.ud.ind[c(1:floor(0.7 * nrow(y.ud.ind))), ]
+y.ud.test.ind <- y.ud.ind[-c(1:floor(0.7 * nrow(y.ud.ind))), ]
+```
+
+
+### Logistic Regressinon
+
+Q1 : No feature is significant
+Q2 : According to the correlation matrix, some features are correlated.
+
+```{r data}
+
+#fit the regression model, second column is treated as a target class
+reg <- glm(y.train ~ ., data = X.train, family = 'binomial'("logit"))
+
+par(mfrow = c(2,2))
+plot(reg)
+  
+summary(reg)
+#prediction on test dataset
+reg.pre.proba <- predict(reg, newdata = X.test, type = "response")
+
+reg.pre <- ifelse(reg.pre.proba >= 0.5, 1, 0) 
+
+#misclassification error of prediction :  0.08498896 ; *or we use mean()
+reg.pre.error <- sum((reg.pre - y.test) != 0)/length(y.test)
+
+#accuracy 0.513392857142857
+print(paste('Accuracy', 1 - reg.pre.error))
+
+#plot recall-precision
+par(mfrow = c(1,1))
+reg.tpr <- performance(prediction(reg.pre.proba, y.test), measure = "tpr", x.measure = "fpr")
+plot(reg.tpr)
+
+#plot auc
+reg.auc <- performance(prediction(reg.pre.proba, y.test), measure = "auc")
+reg.auc <- reg.auc@y.values[[1]]
+print(reg.auc)
+```
+
+```{r data new}
+#fit the regression model, second column is treated as a target class
+reg.new <- glm(y.train.new ~ ., data = X.train.new, family = 'binomial'("logit"))
+
+par(mfrow = c(2,2))
+plot(reg.new)
+  
+summary(reg.new)
+#prediction on test dataset
+reg.pre.proba.new <- predict(reg.new, newdata = X.test.new, type = "response")
+
+reg.pre.new <- ifelse(reg.pre.proba.new >= 0.5, 1, 0) 
+
+#misclassification error of prediction :  0.08498896 ; *or we use mean()
+reg.pre.error.new <- sum((reg.pre.new - y.test.new) != 0)/length(y.test.new)
+
+#accuracy 0.5625
+print(paste('Accuracy', 1 - reg.pre.error.new))
+
+#plot recall-precision
+#par(mfrow = c(1,1))
+#reg.tpr.new <- performance(prediction(reg.pre.proba.new, y.test.new), measure = "tpr", x.measure = "fpr")
+#plot(reg.tpr.new)
+
+#plot auc
+reg.auc.new <- performance(prediction(reg.pre.proba.new, y.test.new), measure = "auc")
+reg.auc.new <- reg.auc.new@y.values[[1]]
+print(reg.auc.new)
+
+```
+
+```{r data ind}
+#fit the regression model, second column is treated as a target class
+reg.ind <- glm(y.train.ind ~ ., data = X.train.ind, family = 'binomial'("logit"))
+
+par(mfrow = c(2,2))
+plot(reg.ind)
+  
+summary(reg.ind)
+#prediction on test dataset
+reg.pre.proba.ind <- predict(reg.ind, newdata = X.test.ind, type = "response")
+
+reg.pre.ind <- ifelse(reg.pre.proba.ind >= 0.5, 1, 0) 
+
+#misclassification error of prediction :  0.08498896 ; *or we use mean()
+reg.pre.error.ind <- sum((reg.pre.ind - y.test.ind) != 0)/length(y.test.ind)
+
+#accuracy 0.63125
+print(paste('Accuracy', 1 - reg.pre.error.ind))
+
+#plot recall-precision
+par(mfrow = c(1,1))
+reg.tpr.ind <- performance(prediction(reg.pre.proba.ind, y.test.ind), measure = "tpr", x.measure = "fpr")
+plot(reg.tpr.ind)
+
+#plot auc
+reg.auc.ind <- performance(prediction(reg.pre.proba.ind, y.test.ind), measure = "auc")
+reg.auc.ind <- reg.auc.ind@y.values[[1]]
+print(reg.auc.ind)s
+```
+
+
+### Logistic Regression with Lasso
+
+In r, package glmnet fits a generalized linear model via penalized maximum likelihood. [2] The regularization path is computed for the lasso or elasticnet penalty at a grid of values for the regularization parameter lambda.
+
+The algorithm uses a quadratic approximation to the log-likelihood, and then coordinate descent on the resulting penalized weighted least-squares problem. These constitute an outer and inner loop.
+
+```{r data}
+#X : must be a numerical matrix
+#y : must be a factor for family = 'binomial'
+
+X.train.lasso <- matrix(as.numeric(unlist(X.train)),nrow=nrow(X.train))
+X.test.lasso <- matrix(as.numeric(unlist(X.test)),nrow=nrow(X.test))
+#We should change dependent variable to factor format
+#! 1. as.vector cannot change a data frame with integers to a vector.
+#! 2. a data frame cannot be changed as a factor, an input of vector is needed.
+y.train.lasso <- factor(unlist(y.train))
+y.test.lasso <- factor(unlist(y.test))
+
+reg.lasso.cv <- cv.glmnet(X.train.lasso, y.train.lasso, family = "binomial", type.measure = "class")
+
+plot(reg.lasso.cv)
+
+#Coefficients corresponding to the least misclassification error
+reg.lasso.cv.coef <- coef(reg.lasso.cv, s = "lambda.min")
+
+#prediction on test dataset
+reg.lasso.cv.pre <- predict(reg.lasso.cv, X.test.lasso, s = "lambda.min", type = "class")
+reg.lasso.cv.pre.vec <- as.vector(reg.lasso.cv.pre, mode = 'numeric')
+
+#misclassification error of prediction : 0.5932584
+reg.lasso.cv.pre.error <- sum((reg.lasso.cv.pre.vec - y.test) != 0)/length(y.test)
+
+#accuracy 0.573660714285714
+print(paste('Accuracy', 1 - reg.lasso.cv.pre.error))
+```
+
+```{r data.new}
+#X : must be a numerical matrix
+#y : must be a factor for family = 'binomial'
+
+X.train.lasso.new <- matrix(as.numeric(unlist(X.train.new)),nrow=nrow(X.train.new))
+X.test.lasso.new <- matrix(as.numeric(unlist(X.test.new)),nrow=nrow(X.test.new))
+#We should change dependent variable to factor format
+#! 1. as.vector cannot change a data frame with integers to a vector.
+#! 2. a data frame cannot be changed as a factor, an input of vector is needed.
+y.train.lasso.new <- factor(unlist(y.train.new))
+y.test.lasso.new <- factor(unlist(y.test.new))
+
+reg.lasso.cv.new <- cv.glmnet(X.train.lasso.new, y.train.lasso.new, family = "binomial", type.measure = "class")
+
+plot(reg.lasso.cv.new)
+
+#Coefficients corresponding to the least misclassification error
+reg.lasso.cv.coef.new <- coef(reg.lasso.cv.new, s = "lambda.min")
+
+#prediction on test dataset
+reg.lasso.cv.pre.new <- predict(reg.lasso.cv.new, X.test.lasso.new, s = "lambda.min", type = "class")
+reg.lasso.cv.pre.vec.new <- as.vector(reg.lasso.cv.pre.new, mode = 'numeric')
+
+#misclassification error of prediction : 0.5932584
+reg.lasso.cv.pre.error.new <- sum((reg.lasso.cv.pre.vec.new - y.test.new) != 0)/length(y.test.new)
+
+#accuracy 0.6125
+print(paste('Accuracy', 1 - reg.lasso.cv.pre.error.new))
+
+```
+
+```{r data.ind}
+#X : must be a numerical matrix
+#y : must be a factor for family = 'binomial'
+
+X.train.lasso.ind <- matrix(as.numeric(unlist(X.train.ind)),nrow=nrow(X.train.ind))
+X.test.lasso.ind <- matrix(as.numeric(unlist(X.test.ind)),nrow=nrow(X.test.ind))
+#We should change dependent variable to factor format
+#! 1. as.vector cannot change a data frame with integers to a vector.
+#! 2. a data frame cannot be changed as a factor, an input of vector is needed.
+y.train.lasso.ind <- factor(unlist(y.train.ind))
+y.test.lasso.ind <- factor(unlist(y.test.ind))
+
+reg.lasso.cv.ind <- cv.glmnet(X.train.lasso.ind, y.train.lasso.ind, family = "binomial", type.measure = "class")
+
+plot(reg.lasso.cv.ind)
+
+#Coefficients corresponding to the least misclassification error
+reg.lasso.cv.coef.ind <- coef(reg.lasso.cv.ind, s = "lambda.min")
+
+#prediction on test dataset
+reg.lasso.cv.pre.ind <- predict(reg.lasso.cv.ind, X.test.lasso.ind, s = "lambda.min", type = "class")
+reg.lasso.cv.pre.vec.ind <- as.vector(reg.lasso.cv.pre.ind, mode = 'numeric')
+
+#misclassification error of prediction : 0.5932584
+reg.lasso.cv.pre.error.ind <- sum((reg.lasso.cv.pre.vec.ind - y.test.ind) != 0)/length(y.test.ind)
+
+#accuracy 0.60625
+print(paste('Accuracy', 1 - reg.lasso.cv.pre.error.ind))
+
+```
+
+
+### Logistic Regression with Ridge
+
+```{r}
+#X : must be a numerical matrix
+#y : must be a factor for family = 'binomial'
+
+X.train.ridge <- X.train.lasso
+X.test.ridge <- X.test.lasso
+#We should change dependent variable to factor format
+#! 1. as.vector cannot change a data frame with integers to a vector.
+#! 2. a data frame cannot be changed as a factor, an input of vector is needed.
+y.train.ridge <- factor(unlist(y.train))
+y.test.ridge <- factor(unlist(y.test))
+
+reg.ridge.cv <- cv.glmnet(X.train.ridge, y.train.ridge, family = "binomial", type.measure = "class")
+
+plot(reg.ridge.cv)
+
+#Coefficients corresponding to the least misclassification error
+reg.ridge.cv.coef <- coef(reg.ridge.cv, s = "lambda.min")
+
+#prediction on test dataset
+reg.ridge.cv.pre <- predict(reg.ridge.cv, X.test.ridge, s = "lambda.min", type = "class")
+reg.ridge.cv.pre.vec <- as.vector(reg.ridge.cv.pre, mode = 'numeric')
+
+#misclassification error of prediction : 0.5977528
+reg.ridge.cv.pre.error <- sum((reg.ridge.cv.pre.vec - y.test) != 0)/length(y.test)
+
+#accuracy 0.462053571428571
+print(paste('Accuracy', 1 - reg.ridge.cv.pre.error))
+```
+
+```{r data.new}
+
+#X : must be a numerical matrix
+#y : must be a factor for family = 'binomial'
+
+X.train.ridge.new <- X.train.lasso.new
+X.test.ridge.new <- X.test.lasso.new
+#We should change dependent variable to factor format
+#! 1. as.vector cannot change a data frame with integers to a vector.
+#! 2. a data frame cannot be changed as a factor, an input of vector is needed.
+y.train.ridge.new <- factor(unlist(y.train.new))
+y.test.ridge.new <- factor(unlist(y.test.new))
+
+reg.ridge.cv.new <- cv.glmnet(X.train.ridge.new, y.train.ridge.new, family = "binomial", type.measure = "class")
+
+plot(reg.ridge.cv.new)
+
+#Coefficients corresponding to the least misclassification error
+reg.ridge.cv.coef.new <- coef(reg.ridge.cv.new, s = "lambda.min")
+
+#prediction on test dataset
+reg.ridge.cv.pre.new <- predict(reg.ridge.cv.new, X.test.ridge.new, s = "lambda.min", type = "class")
+reg.ridge.cv.pre.vec.new <- as.vector(reg.ridge.cv.pre.new, mode = 'numeric')
+
+#misclassification error of prediction : 0.5977528
+reg.ridge.cv.pre.error.new <- sum((reg.ridge.cv.pre.vec.new - y.test.new) != 0)/length(y.test.new)
+
+#accuracy 0.625
+print(paste('Accuracy', 1 - reg.ridge.cv.pre.error.new))
+
+```
+
+```{r data.ind}
+
+#X : must be a numerical matrix
+#y : must be a factor for family = 'binomial'
+
+X.train.ridge.ind <- X.train.lasso.ind
+X.test.ridge.ind <- X.test.lasso.ind
+#We should change dependent variable to factor format
+#! 1. as.vector cannot change a data frame with integers to a vector.
+#! 2. a data frame cannot be changed as a factor, an input of vector is needed.
+y.train.ridge.ind <- factor(unlist(y.train.ind))
+y.test.ridge.ind <- factor(unlist(y.test.ind))
+
+reg.ridge.cv.ind <- cv.glmnet(X.train.ridge.ind, y.train.ridge.ind, family = "binomial", type.measure = "class")
+
+plot(reg.ridge.cv.ind)
+
+#Coefficients corresponding to the least misclassification error
+reg.ridge.cv.coef.ind <- coef(reg.ridge.cv.ind, s = "lambda.min")
+
+#prediction on test dataset
+reg.ridge.cv.pre.ind <- predict(reg.ridge.cv.ind, X.test.ridge.ind, s = "lambda.min", type = "class")
+reg.ridge.cv.pre.vec.ind <- as.vector(reg.ridge.cv.pre.ind, mode = 'numeric')
+
+#misclassification error of prediction : 0.5977528
+reg.ridge.cv.pre.error.ind <- sum((reg.ridge.cv.pre.vec.ind - y.test.ind) != 0)/length(y.test.ind)
+
+#accuracy 0.60625
+print(paste('Accuracy', 1 - reg.ridge.cv.pre.error.ind))
+
+```
+
+### Decision Tree
+
+#### CART????So poor
+
+```{r data}
+#construction of formula for classification/ remove difficulty
+x.name <- paste(names(X), collapse = "+")
+formul <- as.formula(paste("y.ud.train", x.name, sep = "~"))
+
+cart <- rpart(formul, data = X.train)
+plotcp(cart)
+printcp(cart)
+
+cart.pre <- predict(cart, X.test, type = "class")
+print(cart.pre)
+```
+
+```{r data.new}
+#construction of formula for classification/ remove difficulty
+x.name.new <- paste(names(X.new), collapse = "+")
+formul.new <- as.formula(paste("y.ud.train.new", x.name.new, sep = "~"))
+
+cart.new <- rpart(formul.new, data = X.train.new)
+plotcp(cart.new)
+printcp(cart.new)
+
+cart.pre.new <- predict(cart.new, X.test.new, type = "prob")
+print(cart.pre.new)
+
+#
+cart.pre.new <- ifelse(cart.pre.new[,1] <= 0.5, 0, 1)
+#misclassification error of prediction :  0.08498896 ; *or we use mean()
+cart.pre.error.new <- sum((cart.pre.new - y.test.new) != 0)/length(y.test.new)
+
+#accuracy 0.44375
+print(paste('Accuracy', 1 - cart.pre.error.new))
+
+```
+
+```{r data.ind}
+#construction of formula for classification/ remove difficulty
+x.name.ind <- paste(names(X.ind), collapse = "+")
+formul.ind <- as.formula(paste("y.ud.train.ind", x.name.ind, sep = "~"))
+
+cart.ind <- rpart(formul.ind, data = X.train.ind)
+plotcp(cart.ind)
+printcp(cart.ind)
+
+cart.pre.ind <- predict(cart.ind, X.test.ind, type = "prob")
+print(cart.pre.ind)
+
+#
+cart.pre.ind <- ifelse(cart.pre.ind[,1] <= 0.5, 0, 1)
+#misclassification error of prediction :  0.08498896 ; *or we use mean()
+cart.pre.error.ind <- sum((cart.pre.ind - y.test.ind) != 0)/length(y.test.ind)
+
+#accuracy 0.4
+print(paste('Accuracy', 1 - cart.pre.error.ind))
+
+```
+
+#### Random Forest
+
+```{r data}
+#Try short term : 30d, 60d, 90d https://arxiv.org/pdf/1605.00003.pdf
+#After choosing parameters : ntree = 200, mtry = 5, (m = sqrt(p), p predictors)
+#ntree : number of trees
+#mtry : number of variable tested in a region (division)
+random.forest <- randomForest(formul, data = X.train, importance = T, ntree = 200, mtry = 5)
+
+#OOB estimate of  error rate: 47.46%
+plot(random.forest)
+
+random.forest.pre <- predict(random.forest, X.test)
+table(random.forest.pre, y.ud.test)
+
+plot(random.forest$err.rate[, 1], type = "l", xlab = "nombre d'arbres", ylab = "erreur OOB")
+
+#Confusion matrix
+random.forest$confusion
+
+#precision 0.5238095 
+rf.pre.precision <- 22/(22 + 20)
+
+#recall 0.08494208 Very pour recall
+rf.pre.recall <- 22/(22 + 237)
+
+#Accuracy 0.4263393
+rf.pre.accuracy <- (169 + 22)/(169 + 237 + 20 + 22)
+```
+
+```{r data evaluation}
+#feature importance/ 
+
+#percentage cost of transaction volume
+#number of transaction excluding addresses
+#number of transaction per block
+
+#The mean decrease in accuracy a variable causes is determined during the out of bag error calculation phase. The more the accuracy of the random forest decreases due to the exclusion (or permutation) of a single variable, the more important that variable is deemed, and therefore variables with a large mean decrease in accuracy are more important for classification of the data.
+
+# The mean decrease in Gini coefficient is a measure of how each variable contributes to the homogeneity of the nodes and leaves in the resulting random forest. Each time a particular variable is used to split a node, the Gini coefficient for the child nodes are calculated and compared to that of the original node.
+
+varImpPlot(random.forest)
+
+#OOB
+random.forest.pre.prob <- predict(random.forest, X.test, type = "prob")
+
+OOB.pre <- random.forest.pre.prob[,2]
+
+#Recall precision curve
+par(mfrow = c(1, 1))
+rf.rp <- performance(prediction(OOB.pre, y.ud.test), "rec", "prec")
+plot(rf.rp)
+
+#ROC curve
+rf.roc <- performance(prediction(OOB.pre, y.ud.test), "fpr", "tpr")
+plot(rf.roc)
+
+plot(rf.rp@alpha.values[[1]], rf.rp@x.values[[1]])
+lines(rf.rp@alpha.values[[1]], rf.rp@y.values[[1]])
+lines(rf.roc@alpha.values[[1]], rf.roc@x.values[[1]])
+```
+
+```{r data.new}
+#Try short term : 30d, 60d, 90d https://arxiv.org/pdf/1605.00003.pdf
+#After choosing parameters : ntree = 200, mtry = 5, (m = sqrt(p), p predictors)
+#ntree : number of trees
+#mtry : number of variable tested in a region (division)
+random.forest.new <- randomForest(formul.new, data = X.train.new, importance = T, ntree = 500, mtry = 5)
+
+#OOB estimate of  error rate: 47.46%
+plot(random.forest.new)
+
+random.forest.pre.new <- predict(random.forest.new, X.test.new)
+table(random.forest.pre.new, y.ud.test.new)
+
+plot(random.forest.new$err.rate[, 1], type = "l", xlab = "nombre d'arbres", ylab = "erreur OOB")
+
+#Confusion matrix
+random.forest.new$confusion
+
+#precision 0.5882353 
+rf.pre.precision.new <- 10/(10 + 7)
+
+#recall 0.1449275 Very pour recall
+rf.pre.recall.new <- 10/(10 + 59)
+
+#Accuracy 0.5875
+rf.pre.accuracy.new <- (10 + 84)/(84 + 59 + 10 + 7)
+```
+
+```{r data.ind}
+#Try short term : 30d, 60d, 90d https://arxiv.org/pdf/1605.00003.pdf
+#After choosing parameters : ntree = 200, mtry = 5, (m = sqrt(p), p predictors)
+#ntree : number of trees
+#mtry : number of variable tested in a region (division)
+random.forest.ind <- randomForest(formul.ind, data = X.train.ind, importance = T, ntree = 300, mtry = 4, cutoff=c(0.5, 0.5))
+
+#OOB estimate of  error rate: 47.46%
+plot(random.forest.ind)
+
+random.forest.pre.ind <- predict(random.forest.ind, X.test.ind)
+table(random.forest.pre.ind, y.ud.test.ind)
+
+plot(random.forest.ind$err.rate[, 1], type = "l", xlab = "nombre d'arbres", ylab = "erreur OOB")
+
+#Confusion matrix
+random.forest.ind$confusion
+
+#precision 0.59375
+rf.pre.precision.ind <- 19/(19 + 13)
+
+#recall 0.2753623188 Very pour recall
+rf.pre.recall.ind <- 19/(19 + 50)
+
+#Accuracy 0.60625
+rf.pre.accuracy.ind <- (19 + 78)/(78 + 50 + 13 + 19)
+```
+
+#### SVM
+
+Q : can gamma be 0.0 ?
+
+
+```{r data new}
+svm.new <- svm(formul.new, data = X.train.new, cost = 1000, gamma = 0.7, kernel = "radial")
+
+summary(svm.new)
+
+svm.pre.new <- predict(svm.new, X.test.new)
+
+table(svm.pre.new, y.ud.test.new)
+
+#tune to get better performance
+svm.tune.new <- tune(svm, train.x = X.train.new, train.y = y.ud.train.new, kernel = "polynomial", ranges = list(cost = 10^(-2:3), gamma=seq(0.1, 3, 0.1)))
+
+# best parameters:
+#  cost gamma
+#     1   0.1
+
+#best performance: 0.409744
+summary(svm.tune.new)
+
+#SVM using parameters after tuning
+svm.after.tune.new <- svm(formul.new, data = X.train.new, cost = 1, gamma = 0.1, kernel = "polynomial")
+
+summary(svm.after.tune.new)
+
+svm.after.tune.pre.new <- predict(svm.after.tune.new, X.test.new)
+
+table(svm.after.tune.pre.new, y.ud.test.new)
+
+#Accuracy 0.575 more than the one which use radial basis
+print(paste('Accuracy', (52 + 40)/(52 + 40 + 29 + 39)))
+
+```
+
+```{r data ind}
+svm.ind <- svm(formul.ind, data = X.train.ind, cost = 1000, gamma = 0.7, kernel = "radial")
+
+summary(svm.ind)
+
+svm.pre.ind <- predict(svm.ind, X.test.ind)
+
+table(svm.pre.ind, y.ud.test.ind)
+
+#tune to get better performance
+svm.tune.ind <- tune(svm, train.x = X.train.ind, train.y = y.ud.train.ind, kernel = "radial", ranges = list(cost = 10^(-1:1), gamma=seq(0.1, 1, 0.1)))
+
+# best parameters:
+#  cost gamma
+#     1   0.1
+
+#best performance: 0.409744
+summary(svm.tune.ind)
+
+#SVM using parameters after tuning
+svm.after.tune.ind <- svm(formul.ind, data = X.train.ind, cost = 10, gamma = 0.4, kernel = "radial")
+
+summary(svm.after.tune.ind)
+
+svm.after.tune.pre.ind <- predict(svm.after.tune.ind, X.test.ind)
+
+table(svm.after.tune.pre.ind, y.ud.test.ind)
+
+#Accuracy 0.575 more than the one which use radial basis
+print(paste('Accuracy', (52 + 40)/(52 + 40 + 29 + 39)))
+
+```
+
+#### ANN
+
+```{r data new }
+
+nn.formul <- as.formula(paste("y.train.new", x.name.new, sep = "~"))
+
+nn.new <- neuralnet(nn.formul, 
+                    data = X.train.new,
+                    err.fct = "ce", #error function as cross-entropy
+                    linear.output = F, #ensure the output is mapped by the activation function to the interval [0, 1]
+                    hidden = 2#2 hidden layers
+          
+)
+
+nn.train.error <- sum((ifelse(unlist(nn.new$net.result) >= 0.5, 1, 0) - y.train.new) != 0)/length(y.train.new)
+
+#Accuracy 0.785522788203753
+print(paste('Accuracy', 1 - nn.train.error))
+
+#prediction
+nn.pre.new <- compute(nn.new, covariate = as.matrix(X.test.new, byrow = T, ncol = ncol(X.test.new)))
+
+head(nn.pre.new)
+nn.test.error <- sum((ifelse(unlist(nn.pre.new$net.result) >= 0.5, 1, 0) - y.test.new) != 0)/length(y.test.new)
+
+#Accuracy 0.53125
+print(paste('Accuracy', 1 - nn.test.error))
+
+plot(nn.new)
+
+```
+
+```{r data ind}
+
+nn.formul.ind <- as.formula(paste("y.train.ind", x.name.ind, sep = "~"))
+
+nn.ind <- neuralnet(nn.formul.ind, 
+                    data = X.train.ind,
+                    err.fct = "ce", #error function as cross-entropy
+                    linear.output = F, #ensure the output is mapped by the activation function to the interval [0, 1]
+                    hidden = 1#2 hidden layers
+          
+)
+
+nn.train.error.ind <- sum((ifelse(unlist(nn.ind$net.result) >= 0.5, 1, 0) - y.train.ind) != 0)/length(y.train.ind)
+
+#Accuracy 0.785522788203753
+print(paste('Accuracy', 1 - nn.train.error.ind))
+
+#prediction
+nn.pre.ind <- compute(nn.ind, covariate = as.matrix(X.test.ind, byrow = T, ncol = ncol(X.test.ind)))
+
+head(nn.pre.ind)
+nn.test.error <- sum((ifelse(unlist(nn.pre.ind$net.result) >= 0.5, 1, 0) - y.test.ind) != 0)/length(y.test.ind)
+
+#Accuracy 0.53125
+print(paste('Accuracy', 1 - nn.test.error.ind))
+
+plot(nn.ind)
+
+```
+
+### How to decide a stop loss percentage
+
+```{r}
+#Probability and quantiles of down more than 5% from 2013-01-03
+#0.06304493628
+prob.down.5 <- sum(length(data$close_change[data$close_change <= -0.05]))/nrow(data)
+q.down.5 <- summary(data$close_change[data$close_change <= -0.05])
+
+#Probability and quantiles of rise more than 5% from 2013-01-03
+#0.0932260228
+prob.up.5 <- sum(length(data$close_change[data$close_change >= 0.05]))/nrow(data)
+q.up.5 <- summary(data$close_change[data$close_change >= 0.05])
+
+```  
+
+## Time series analyse
+
+```{r 2013}
+#Date from 2013-01-03
+ts <- zoo(data$close, order.by = data$Date)
+tsdisplay(ts)
+
+#----diffenrencing------------------------------------------------------------
+ts_diff_1 = diff(log(ts), 1)
+
+#deal with NaN and 0
+ts_diff_1[is.nan(ts_diff_1)] <- 0
+
+ts_diff_1[ts_diff_1 == -Inf | ts_diff_1 == Inf ] <- 0
+
+tsdisplay(ts_diff_1)
+
+#Tendency stationary test-----Dickey Fuller------stationary----------------
+adf.test(ts_diff_1, alternative = "stationary", k = 0)
+
+#Decomposition of time series
+#Trend
+ts.log <- log(ts)
+
+ts.log[is.nan(ts.log)] <- mean(ts.log[!(ts.log == -Inf | ts.log == Inf ) & ! (is.nan(ts.log))])
+ts.log[ts.log == -Inf | ts.log == Inf ] <- mean(ts.log[!(ts.log == -Inf | ts.log == Inf ) & ! (is.nan(ts.log))])
+
+trend.ts <- zoo(ma(ts.log, order = 100, centre = T), order.by = data$Date)
+
+#Detrend time series
+detrend.ts <- ts.log - trend.ts
+
+#Average seasonality 
+ts.matrix <- t(matrix(data = detrend.ts[-1], nrow = 745, ncol = 2, byrow = T))
+period.ts <- colMeans(ts.matrix, na.rm = T)
+
+#random noise
+random.ts <- detrend.ts[-1] - period.ts
+
+par(mfrow = c(2, 3))
+plot(ts.log, type = 'l')
+lines(trend.ts)
+
+plot(trend.ts)
+
+plot(detrend.ts)
+
+plot(rep(period.ts, 2), type = 'l')
+
+plot(random.ts)
+
+#ARIMA model package forecast
+#ARIMA(3, 2, 1)
+tsdisplay(ts.log)
+ts.arima <- auto.arima(ts.log, seasonal = F)
+
+#prediction on training data
+par(mfrow = c(1, 1))
+plot(ts.log, col = "blue")
+lines(fitted(ts.arima), col = "red")
+
+#residual diagnonise
+ts.res <- residuals(ts.arima)
+tsdisplay(ts.res)
+#residuals are stationary
+adf.test(ts.res, alternative = "stationary", k = 0)
+#Ljung-Box test, no correlated parameter in 5 lags
+Box.test(ts.res, lag = 5, type = "Ljung") 
+
+#Forcast 
+plot(forecast(ts.arima, h = 1))
+```
+
+### Hybrid ARIMA-GARCH Prediction
+
+```{r garch}
+ts.garch <- ts.res
+
+ts.garch[is.nan(ts.garch)] <- mean(ts.garch[!(ts.garch == -Inf | ts.garch == Inf ) & ! (is.nan(ts.garch))])
+
+ts.garch[ts.garch == -Inf | ts.garch == Inf ] <-  mean(ts.garch[!(ts.garch == -Inf | ts.garch == Inf ) & ! (is.nan(ts.garch))])
+tsdisplay(ts.garch)
+
+ts.garch.fit <- garch(ts.garch)
+summary(ts.garch.fit)
+
+#prediction
+par(mfrow = c(1, 1))
+plot(ts.res, col = "blue")
+lines(fitted(ts.garch.fit), col = "red")
+
+#residual diagnonise
+ts.res.res <- residuals(ts.garch.fit)
+tsdisplay(ts.res.res)
+#residuals are stationary
+adf.test(ts.res.res[-1], alternative = "stationary", k = 0)
+#Ljung-Box test, no correlated parameter in 2 lags
+Box.test(ts.res.res[-1], lag = 1, type = "Ljung") 
+
+#One day Forcast 
+garch.predict.one.day <- function(fit, epsilon) {
+    sigma.t1 = tail(fitted(fit)[,1] ,1)   
+    ifelse(sqrt(sum(coef(fit) * c(1,  epsilon^2, sigma.t1^2) )) < 0, 0, sqrt(sum(coef(fit) * c(1,  epsilon^2, sigma.t1^2) )))
+}
+
+ts.garch.fore <- garch.predict.one.day(ts.garch.fit, tail(ts.res, 1))
+
+#Conditional variances
+ts.cv <- ts.garch.fit$fit[,1]^2 
+#Generate plot of Log Price, 95% Upper and Lower limit 
+ts.fit <- fitted(ts.arima)
+low <- ts.fit - 1.96*sqrt(ts.cv)
+high <- ts.fit + 1.96*sqrt(ts.cv) 
+plot(ts.log,type='l',main='Log Price of Bitcoin') 
+lines(low,col='red')
+lines(high,col='blue')
+lines(ts.fit, col = 'yellow')
+
+#error MSE 0.002444773
+ts.mse <- mean((as.vector(ts.log) - as.vector(ts.fit))^2)
+
+#error MAPE 0.004985625
+ts.mape <- sum(abs((as.vector(ts.log) - as.vector(ts.fit))/as.vector(ts.fit)))/length(ts.fit)
+
+```
+
+```{r}
+ts.log.date <- seq(as.Date('2013-01-05'),to=as.Date('2017-02-03'),by='1 day')
+
+ts.log.return <- bind_cols(data.frame(ts.log.date), data.frame(ts.log), data.frame(ts.fit), data.frame(high), data.frame(low))[-1,]
+names(ts.log.return) <- c("Date", "ARIMA-GARCH Log Price", "ARIMA-GARCH Predicted Log Price", "High Price", "Low Price")
+
+ts.log.return.plot <- melt(ts.log.return, id = "Date")
+
+plot.ts.log.return <- ggplot(ts.log.return.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable ) )+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "ARIMA-GARCH Log Price Prediction", x = "Date", y = "Log Price")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("ARIMA-GARCH Log Price", "ARIMA-GARCH Predicted Log Price", "High", "Low")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("ARIMA-GARCH Log Price", "ARIMA-GARCH Predicted Log Price", "High", "Low"))
+
+
+
+```
+
+
+
+```{r momentum or mean reversion}
+#Date from 2015-11-25
+ts <- zoo(filter(data, Date >= "2015-11-25")$close, order.by = filter(data, Date >= "2015-11-25")$Date)
+tsdisplay(ts)
+
+#----AR(10)------------------------------------------------------------
+ts_diff_1 = diff(ts, 1)
+
+tsdisplay(ts_diff_1)
+
+#Tendency stationary test-----Dickey Fuller------stationary----------------
+adf.test(ts_diff_1, alternative = "stationary", k = 0)
+
+kpss.test(ts_diff_1)
+
+#Decomposition of time series
+#Trend
+trend.ts <- zoo(ma(ts, order = 50, centre = T), order.by = data$Date)
+
+#Detrend time series
+detrend.ts <- ts/trend.ts
+
+#Average seasonality 
+ts.matrix <- t(matrix(data = detrend.ts[-1], nrow = 1490, ncol = 4, byrow = T))
+period.ts <- colMeans(ts.matrix, na.rm = T)
+
+#random noise
+random.ts <- detrend.ts[-1]/period.ts
+
+par(mfrow = c(2, 3))
+plot(ts, type = 'l')
+lines(trend.ts)
+
+plot(trend.ts)
+
+plot(detrend.ts)
+
+plot(rep(period.ts, 2), type = 'l')
+
+plot(random.ts)
+
+```
+
+## Strategy
+
+### Hybrid Rolling ARIMA-GARCH Strategy 
+```{r}
+#Rolling Optimal hybrid ARIMA + GARCH
+
+#----Log daily return------------------------------------------------------------
+#Differences of log prices represent the returns and are similar to percentage changes of stock prices.
+ts_diff_1 = diff(log(ts), 1)
+
+#deal with NaN and 0
+ts_diff_1[is.nan(ts_diff_1)] <- 0
+
+ts_diff_1[ts_diff_1 == -Inf | ts_diff_1 == Inf ] <- 0
+
+#ts.log.diff : log daily return
+#len.window : time window used every calibration of model
+#len.fore : iteration times
+
+len.window <- 7
+len.fore <- length(ts_diff_1) - len.window
+forecasts.position <- rep(0, len.fore)
+ts.roll.forecast <- rep(0, len.fore)
+forecasts.char <- vector(mode = "character", length = len.fore)
+
+roll.opt <- function(ts.log.diff){
+  
+  ts.arima <- auto.arima(ts.log.diff, seasonal = F)
+  ts.res <- residuals(ts.arima)
+  ts.garch.fit <- garchFit(~ garch(1, 1), data = ts.res) 
+  #ts.log.argarch <- fitted(ts.arima) + fitted(ts.garch.fit)#first element is NA
+  #tommorow daily return forecast
+  ts.log.fore <- forecast(ts.arima, h = 1)$mean[1] + predict(ts.garch.fit, n.ahead = 1)$meanForecast
+  return(ts.log.fore)
+}
+
+#if the forecast of tomorrow daily return is negative, we short it at today's close price
+#if it is positive, we hold it 
+ts.roll.fit <- function(ts.roll.fore, ts.log.diff, len = len.fore){
+  
+  
+  if((ts.roll.fore[1] < 0) && (ts.log.diff[1] >= 0) ){
+        forecasts.position[1] <- -1
+        forecasts.char[1] <- "Sell"
+      } else if((ts.roll.forecast[1] > 0) && (ts.log.diff[1] < 0)){
+        forecasts.position[1] <- 1
+        forecasts.char[1] <- "Buy"
+      }
+  forecasts.position[1]
+  
+  for (d in 2:len){
+    
+    #ts.roll.forecast[d] <- roll.opt(ts.log.diff[d : (d + len.window)])$forecast
+    
+    #Short
+      if((ts.roll.fore[d] < 0) && (ts.log.diff[d] >= 0) && (forecasts.position[d-1] != -1)){
+        forecasts.position[d] <- -1
+        forecasts.char[d] <- "Sell"
+      } else if((ts.roll.fore[d] > 0) && (ts.log.diff[d] < 0) && (forecasts.position[d-1] != 1)){
+        forecasts.position[d] <- 1
+        forecasts.char[d] <- "Buy"
+      }
+  }
+  
+  return(list(fore.position = forecasts.position, fore.char = forecasts.char))
+  
+ }
+
+#Calculate rolling forecasts
+ptm <- proc.time()
+ts.roll.fore <- rollapply(ts_diff_1, 7, function(x) roll.opt(x), align='right')
+# 205.009s   
+proc.time() - ptm
+
+
+#forecast positions
+ts.fore.position <- ts.roll.fit(ts.roll.fore, ts_diff_1[(len.window - 1) : (length(ts_diff_1) - 1)])
+
+
+#log return
+ts.argarch.return <- log(cumprod(1 + ts_diff_1[(len.window) : (length(ts_diff_1) - 1)] * ts.fore.position$fore.position))
+ts.buyhold.return <- log(cumprod(1 + ts_diff_1[(len.window) : (length(ts_diff_1) - 1)]))
+
+plot(ts.argarch.return, type = 'l', col = 'red')
+lines(ts.buyhold.return, col = 'blue')
+```
+
+```{r ggplot}
+ts.date <- seq(as.Date('2013-01-13'),to=as.Date('2017-02-03'),by='1 day')
+
+ts.return <- bind_cols(data.frame(ts.date), data.frame(ts.argarch.return), data.frame(ts.buyhold.return))
+names(ts.return) <- c("Date", "ARIMA-GARCH Return", "Buy&Hold Return")
+
+ts.return.plot <- melt(ts.return, id = "Date")
+
+plot.ts.return <- ggplot(ts.return.plot,
+                           aes(x = Date,
+                               y = value,
+                               group = variable,
+                               color = variable))+ 
+                          geom_line(size = 1) +
+                          labs(list(title = "Comparasions of Two Strategies' Returns", x = "Date", y = "Log Daily Return")) +
+                          #remove legend name
+                          theme(legend.title=element_blank()) +
+                          #change variable names
+                          scale_colour_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("ARIMA-GARCH Return", "Buy&Hold Return")) +
+                          scale_linetype_discrete(#breaks = c("BTC/USD", "BTC/CNY", "BTC/EUR"),
+                                                labels = c("ARIMA-GARCH Return", "Buy&Hold Return"))
+
+
+```
+
+
+### Hybrid Rolling ARIMA-GARCH and Momentum RSI Strategy
+
+```{r}
+#RSI
+data.ts <- data
+data.ts$rsi <- RSI(data.ts$close, 14)
+ts.rsi <- zoo(data.ts$rsi, order.by = data.ts$Date)
+
+ts.roll.fore.rsi <- ts.roll.fore[9:length(ts.roll.fore)]
+ts.log.diff.rsi <- ts_diff_1[14:length(ts_diff_1)]
+
+ts.roll.fit.rsi <- function(ts.roll.fore, ts.log.diff, len = len.fore){
+  
+  
+  if((ts.roll.fore[1] < 0) && (ts.log.diff[1] >= 0) && (ts.rsi[1] > 50)){
+        forecasts.position[1] <- -1
+        forecasts.char[1] <- "Sell"
+      } else if((ts.roll.forecast[1] > 0) && (ts.log.diff[1] < 0) && (ts.rsi[1] <= 50)){
+        forecasts.position[1] <- 1
+        forecasts.char[1] <- "Buy"
+      }
+  forecasts.position[1]
+  
+  for (d in 2:len){
+    
+    #ts.roll.forecast[d] <- roll.opt(ts.log.diff[d : (d + len.window)])$forecast
+    
+    #Short
+      if((ts.roll.fore[d] < 0) && (ts.log.diff[d] >= 0) && (forecasts.position[d-1] != -1)  && (ts.rsi[d] > 50)){
+        forecasts.position[d] <- -1
+        forecasts.char[d] <- "Sell"
+      } else if((ts.roll.fore[d] > 0) && (ts.log.diff[d] < 0) && (forecasts.position[d-1] != 1)  && (ts.rsi[d] <= 50)){
+        forecasts.position[d] <- 1
+        forecasts.char[d] <- "Buy"
+      }
+  }
+  
+  return(list(fore.position = forecasts.position, fore.char = forecasts.char))
+  
+}
+
+
+#forecast positions
+ts.fore.position.rsi <- ts.roll.fit.rsi(ts.roll.fore.rsi, ts.log.diff.rsi)
+
+
+#log return
+ts.argarch.return.rsi <- log(cumprod(1 + ts.log.diff.rsi * ts.fore.position.rsi$fore.position))
+ts.buyhold.return.rsi <- log(cumprod(1 + ts.log.diff.rsi))
+
+plot(ts.argarch.return.rsi, type = 'l', col = 'red')
+lines(ts.buyhold.return.rsi, col = 'blue')
+
+
+```
+
+
+## Reference :
+
+[1] Logistic Regression in r : https://www.r-bloggers.com/how-to-perform-a-logistic-regression-in-r/
+
+[2] Glmnet package in r : https://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html#log
+
+[3] glmnet : https://cran.r-project.org/web/packages/glmnet/glmnet.pdf
+
+[4] Machine learning techniques for stock prediction http://www.vatsals.com/Essays/MachineLearningTechniquesforStockPrediction.pdf
+
+[5] Predicting the direction of stock market prices using random forest
+https://arxiv.org/pdf/1605.00003.pdfs
+
+[6] Predicting the price of Bitcoin using Machine Learning
+http://trap.ncirl.ie/2496/1/seanmcnally.pdf
+
+[7] neuralnet https://journal.r-project.org/archive/2010-1/RJournal_2010-1_Guenther+Fritsch.pdf
+
+[8] neuralnet https://cran.r-project.org/web/packages/neuralnet/neuralnet.pdf
+
+[9] Hybrid ARIMA-GARCH Prediction https://talksonmarkets.files.wordpress.com/2012/09/time-series-analysis-with-arima-e28093-arch013.pdf
+
+
